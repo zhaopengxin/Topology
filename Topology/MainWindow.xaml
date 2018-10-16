@@ -1,0 +1,151 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Topology"
+        xmlns:go="http://schemas.nwoods.com/GoXam"
+        xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid" x:Class="Topology.MainWindow"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="676.2" Width="1017.6" Loaded="Window_Loaded" Closing="Window_Closing">
+	<Window.Resources>
+		<!-- show either a "+" or a "-" as the Button content -->
+		<go:BooleanStringConverter x:Key="theButtonConverter" TrueString="-" FalseString="+" />
+		
+		<!--Here are the Node template-->
+		<go:DataTemplateDictionary x:Key="NodeTemplate" >
+			<DataTemplate x:Key="BusTemplate" >
+				<StackPanel Orientation="Horizontal" go:Part.SelectionAdorned="True" 
+							go:Part.LayoutId="{Binding Data.LayoutID}">
+					<Border BorderThickness="1" BorderBrush="Black" Padding="2,0,2,0" CornerRadius="3" 
+					MouseLeftButtonDown="Border_MouseLeftButtonDown">
+						<StackPanel>
+							<TextBlock Text="{Binding Data.Type}"/>
+							<TextBlock Text="{Binding Data.Key}"/>
+							<TextBlock Text="{Binding Data.Name}"/>
+						</StackPanel>
+					</Border>
+				</StackPanel>
+			</DataTemplate>
+			
+			<DataTemplate x:Key="ExtBusTemplate" >
+				<StackPanel Orientation="Horizontal" go:Part.SelectionAdorned="True"
+                  go:Node.IsTreeExpanded="False" go:Part.LayoutId="{Binding Data.LayoutID}">
+					<Border BorderThickness="1" BorderBrush="Black" Padding="2,0,2,0" CornerRadius="3" 
+					MouseLeftButtonDown="Border_MouseLeftButtonDown">
+						<StackPanel>
+							<TextBlock Text="{Binding Data.Type}"/>
+							<TextBlock Text="{Binding Data.Key}"/>
+							<TextBlock Text="{Binding Data.Name}"/>
+						</StackPanel>
+					</Border>
+					<!-- This Button changes the visibility of subtrees by toggling Node.IsExpandedTree -->
+					<Button x:Name="myCollapseExpandButton" Click="CollapseExpandButton_Click"
+            Content="{Binding Path=Node.IsExpandedTree, Converter={StaticResource theButtonConverter}}" 
+							Width="15" Height="15" VerticalAlignment="Top" HorizontalAlignment="Left" 
+							Padding="0" Margin="0" FontSize="10"/>
+				</StackPanel>
+				
+				
+			</DataTemplate>
+			<DataTemplate x:Key="GeneratorTemplate">
+				<go:NodePanel go:Part.LayoutId="{Binding Data.LayoutID}" MouseLeftButtonDown="Border_MouseLeftButtonDown">
+					<go:NodeShape go:NodePanel.Figure="ACvoltageSource" Fill="WhiteSmoke" Stroke="Black"/>
+					<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+						<TextBlock Text="Generator:"/>
+						<TextBlock Text="{Binding Data.Key}"/>
+						<TextBlock Text="{Binding Data.Name}"/>
+					</StackPanel>
+				</go:NodePanel>
+			</DataTemplate>
+			<DataTemplate x:Key="LoadTemplate">
+				<go:NodePanel go:Part.LayoutId="{Binding Data.LayoutID}" MouseLeftButtonDown="Border_MouseLeftButtonDown">
+					<go:NodeShape go:NodePanel.Figure="Circle" Fill="WhiteSmoke" Stroke="Black"/>
+					<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+						<TextBlock Text="Load:"/>
+						<TextBlock Text="{Binding Data.Name}"/>
+					</StackPanel>
+				</go:NodePanel>
+			</DataTemplate>
+		</go:DataTemplateDictionary>
+
+		<!--Here are the link template-->
+		<go:DataTemplateDictionary x:Key="LinkTemplate">
+			<DataTemplate x:Key="BranchTemplate">
+				<go:LinkPanel go:Part.SelectionAdorned="True" MouseLeftButtonDown="LinkPanel_MouseLeftButtonDown">
+					<!--<go:Link.Route>
+						<go:Route Curve="Bezier" />
+					</go:Link.Route>-->
+					<go:LinkShape Stroke="Black" StrokeThickness="2"/>
+					<TextBlock Text="Branch"
+							   go:LinkPanel.Offset="0 -10" go:LinkPanel.Orientation="Upright"></TextBlock>
+				</go:LinkPanel>
+			</DataTemplate>
+			<DataTemplate x:Key="InterfaceTemplate">
+				<go:LinkPanel go:Part.SelectionAdorned="True" MouseLeftButtonDown="LinkPanel_MouseLeftButtonDown">
+					<!--<go:Link.Route>
+						<go:Route Curve="Bezier" />
+					</go:Link.Route>-->
+					<go:LinkShape Stroke="Blue" StrokeThickness="2"/>
+					<TextBlock Text="Interface"
+							   go:LinkPanel.Offset="0 -10" go:LinkPanel.Orientation="Upright"></TextBlock>
+				</go:LinkPanel>
+			</DataTemplate>
+			<DataTemplate x:Key="NormalTemplate">
+				<go:LinkPanel go:Part.SelectionAdorned="True" MouseLeftButtonDown="LinkPanel_MouseLeftButtonDown">
+					<go:Link.Route>
+						<go:Route Curve="Bezier" />
+					</go:Link.Route>
+					<go:LinkShape Stroke="Black" StrokeThickness="1"/>
+
+				</go:LinkPanel>
+			</DataTemplate>
+		</go:DataTemplateDictionary>
+
+	</Window.Resources>
+	<Grid>
+		<GroupBox Header="Bus List" Margin="0,0,-0.4,0" Height="180" VerticalAlignment="Top">
+			<Grid>
+				<dxg:GridControl x:Name="lstBus" SelectionMode="Row" SelectionChanged="lstBus_SelectionChanged" 
+								 AutoGenerateColumns="AddNew" EnableSmartColumnsGeneration="True">
+					<dxg:GridControl.View>
+						<dxg:TableView x:Name="lstBusView"  AllowEditing="False" AutoWidth="True"
+									   AllowPerPixelScrolling="True" ShowGroupPanel="False" ShowTotalSummary="True"/>
+					</dxg:GridControl.View>
+				</dxg:GridControl>
+
+			</Grid>
+		</GroupBox>
+		<go:Diagram x:Name="myDiagram" 
+					Padding="10"
+					HorizontalContentAlignment="Center" 
+					VerticalContentAlignment="Center"
+					NodeTemplateDictionary="{StaticResource NodeTemplate}" 
+					LinkTemplateDictionary="{StaticResource LinkTemplate}" 
+					Margin="0,146,-0.4,79.6">
+			<go:Diagram.Layout>
+				<!--the diagram's layout is actually by four separate tree layouts,
+             one for each direction 
+				 the "FixedRoots" arrangement causes the ROOT node not to be moved 
+				 not setting the port spot at each parent node means links will
+             come out straight from the center-->
+
+				<!--LayerSpacing is control the distance of each layer, so called length of the link-->
+				<go:MultiLayout>
+					<go:TreeLayout Id="Right" Angle="0" Arrangement="FixedRoots" SetsPortSpot="False" LayerSpacing="150"/>
+					<go:TreeLayout Id="Down" Angle="90" Arrangement="FixedRoots" SetsPortSpot="False" />
+					<go:TreeLayout Id="Left" Angle="180" Arrangement="FixedRoots" SetsPortSpot="False" />
+					<go:TreeLayout Id="Up" Angle="270" Arrangement="FixedRoots" SetsPortSpot="False" />
+				</go:MultiLayout>
+			</go:Diagram.Layout>
+		</go:Diagram>
+		<GroupBox Header="Information" Margin="0,342,-0.4,-0.4" Height="80" VerticalAlignment="Bottom">
+			<Grid>
+				<TextBlock x:Name="TxtInfo" HorizontalAlignment="Left" Margin="10,0,-1.4,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Height="44" Width="761"/>
+			</Grid>
+		</GroupBox>
+
+
+
+	</Grid>
+</Window>
